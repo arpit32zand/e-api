@@ -48,7 +48,7 @@ router.route("/add").post((req, res) => {
       console.log("Send!");
     }
   });
-  res.sendFile("verifica.html", { root: "../eguru-app/" });
+  res.sendFile("verifica.html", { root: "../e-app/" });
 });
 
 router.route("/verify").post((req, res) => {
@@ -70,6 +70,7 @@ router.route("/verify").post((req, res) => {
           .then(() => res.send("Account Created SuccessFully"))
           .then(() => res.redirect("http://localhost:3001/sign-up/"))
           .catch(err => res.status(400).json("error: " + err));
+        res.clearCookie("userDetails");
       }
     });
   } else {
@@ -80,32 +81,40 @@ router.route("/verify").post((req, res) => {
 router.route("/forgotmail").post((req, res) => {
   const email = req.body.email;
   const uurl = "http://localhost:3001/forgot-pass/";
-  res.cookie("uDetail", { email: email }, { maxAge: 1000 * 60 * 5 });
-  var transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    requireTLS: true,
-    auth: {
-      user: "eguru.proj@gmail.com",
-      pass: "pehelahai1"
-    }
-  });
-  var mailOptions = {
-    from: "eguru.proj@gmail.com",
-    to: email,
-    subject: "no-reply",
-    text: "Click on the link Given below \n" + uurl
-  };
 
-  transporter.sendMail(mailOptions, function(error, info) {
-    if (error) {
-      console.log(error);
-    } else {
-      console.log("Send!");
+  User.findOne({ email: email }, (err, foundData) => {
+    if (err) {
+      res.status((400).json("error: " + err));
     }
+    if (foundData) {
+      res.cookie("uDetail", { email: email }, { maxAge: 1000 * 60 * 5 });
+      var transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        requireTLS: true,
+        auth: {
+          user: "eguru.proj@gmail.com",
+          pass: "pehelahai1"
+        }
+      });
+      var mailOptions = {
+        from: "eguru.proj@gmail.com",
+        to: email,
+        subject: "no-reply",
+        text: "Click on the link Given below \n" + uurl
+      };
+
+      transporter.sendMail(mailOptions, function(error, info) {
+        if (error) {
+          console.log(error);
+        } else {
+          console.log("Send!");
+        }
+      });
+      res.redirect("https://mail.google.com/");
+    } else res.send("Account Doesn't Exist");
   });
-  res.redirect("https://mail.google.com/");
 });
 
 router.route("/forgotpass").post((req, res) => {
@@ -124,7 +133,10 @@ router.route("/forgotpass").post((req, res) => {
             foundData.password = hash;
             foundData.save((err, data) => {
               if (err) console.log(err);
-              else res.send("Password Changed Successfully");
+              else {
+                res.clearCookie("uDetail");
+                res.send("Password Changed Successfully");
+              }
             });
           }
         });
@@ -151,28 +163,6 @@ router.route("/").post((req, res) => {
         }
       });
     } else res.send("byebye");
-  });
-});
-
-router.route("/test").get((req, res) => {
-  const pass = "chagekardoplease";
-  bcrypt.hash(pass, saltRounds, function(err, hash) {
-    if (err) {
-      console.log(err);
-    } else {
-      res.send(hash);
-    }
-  });
-});
-
-router.route("/testing").get((req, res) => {
-  const hash = "$2a$10$m8Hs7lNZFnyCIr9NsLRdUOLgSAipy1C1ciWoTkO1abPtf7v4AguwW";
-  const pass = "changeaaplease";
-  bcrypt.compare(pass, hash, (err, result) => {
-    if (err) console.log(err);
-    else {
-      res.send(result);
-    }
   });
 });
 

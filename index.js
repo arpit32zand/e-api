@@ -25,16 +25,16 @@ const usersRoute = require("./routers/users");
 app.use("/user", usersRoute);
 
 app.get("/sign-up", (req, res) => {
-  res.sendFile("SignUp.html", { root: "../eguru-app/" });
+  res.sendFile("SignUp.html", { root: "../e-app/" });
 });
 app.get("/log-in", (req, res) => {
-  res.sendFile("LogIn.html", { root: "../eguru-app/" });
+  res.sendFile("LogIn.html", { root: "../e-app/" });
 });
 app.get("/forgot-mail", (req, res) => {
-  res.sendFile("forpassmail.html", { root: "../eguru-app/" });
+  res.sendFile("forpassmail.html", { root: "../e-app/" });
 });
 app.get("/forgot-pass", (req, res) => {
-  res.sendFile("forgotpass.html", { root: "../eguru-app/" });
+  res.sendFile("forgotpass.html", { root: "../e-app/" });
 });
 
 app.listen(port, () => console.log(`Listening At Port ${port}`));
