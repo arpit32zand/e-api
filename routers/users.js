@@ -14,6 +14,47 @@ const saltRounds = 10;
 router.use(cookieParser());
 
 //sign-up
+// router.route("/add").post((req, res) => {
+//   const mes = req.body.vcode;
+//   const email = req.body.email;
+
+//   User.findOne({ email: email }, (err, foundAcc) => {
+//     if (err) console.log(err);
+
+//     if (!foundAcc) {
+//       var transporter = nodemailer.createTransport({
+//         host: "smtp.gmail.com",
+//         port: 587,
+//         secure: false,
+//         requireTLS: true,
+//         auth: {
+//           user: "eguru.proj@gmail.com",
+//           pass: "pehelahai1"
+//         }
+//       });
+//       var mailOptions = {
+//         from: "eguru.proj@gmail.com",
+//         to: email,
+//         subject: "no-reply",
+//         text: "Please Enter This Verification Code to Register \n" + mes
+//       };
+
+//       transporter.sendMail(mailOptions, function(error, info) {
+//         if (error) {
+//           console.log(error);
+//         } else {
+//           console.log("Send!");
+//         }
+//       });
+
+//       res.send({
+//         result: "Send",
+//       });
+//     } else {
+//       res.send({ result: "Account Already Exist!" });
+//     }
+//   });
+// });
 router.route("/add").post((req, res) => {
   const username = req.body.username;
   const email = req.body.email;
@@ -61,7 +102,7 @@ router.route("/add").post((req, res) => {
 
       transporter.sendMail(mailOptions, function(error, info) {
         if (error) {
-          console.log(error);
+          console.log("Mailer error : ",error);
         } else {
           console.log("Send!");
         }
@@ -78,6 +119,31 @@ router.route("/add").post((req, res) => {
 });
 
 //email verification
+// router.route("/verify").post((req, res) => {
+//   const code = req.body.vcode;
+//   const checkpin = req.body.vercode;
+//   const username = req.body.username;
+//   const email = req.body.email;
+//   let password = req.body.password;
+//   if (code == checkpin) {
+//     bcrypt.hash(password, saltRounds, function(err, hash) {
+//       if (err) {
+//         console.log(err);
+//       } else {
+//         password = hash;
+//         const newAcc = new User({ username, email, password });
+//         newAcc
+//           .save()
+//           .then(() => res.send({ result: "Created" }))
+//           //.then(() => res.redirect("http://localhost:3001/sign-up/"))
+//           .catch(err => res.status(400).json("error: " + err));
+//         //res.clearCookie("userDetails");
+//       }
+//     });
+//   } else {
+//     res.send({ result: "Incorrect" });
+//   }
+// });
 router.route("/verify").post((req, res) => {
   const code = req.body.vcode;
   const checkpin = req.cookies.userDetails.vercode;
