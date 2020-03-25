@@ -12,75 +12,102 @@ const User = require("../models/user.model");
 const saltRounds = 10;
 
 router.use(cookieParser());
+
+//sign-up
 router.route("/add").post((req, res) => {
-  const fullname = req.body.fullname;
+  const username = req.body.username;
   const email = req.body.email;
   const password = req.body.password;
-  const mes = Math.floor(Math.random() * 1000000) + "";
 
-  res.cookie(
-    "userDetails",
-    { fullname: fullname, email: email, password: password, vercode: mes },
-    { maxAge: 1000 * 60 * 10 }
-  );
+  User.findOne({ email: email }, (err, foundAcc) => {
+    if (err) console.log(err);
 
-  var transporter = nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-    requireTLS: true,
-    auth: {
-      user: "eguru.proj@gmail.com",
-      pass: "pehelahai1"
-    }
-  });
-  var mailOptions = {
-    from: "eguru.proj@gmail.com",
-    to: email,
-    subject: "no-reply",
-    text: mes
-  };
+    if (!foundAcc) {
+      const mes = Math.floor(Math.random() * 1000000) + "";
+      let cdata = {
+        vercode: mes,
+        username: username,
+        email: email,
+        password: password
+      };
+      res.cookie(
+        "userDetails",
+        cdata,
+        {
+          maxAge: 1000 * 60 * 5
+        },
+        {
+          httpOnly: false,
+          secure: false,
+          sameSite: false
+        }
+      );
+      var transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        requireTLS: true,
+        auth: {
+          user: "eguru.proj@gmail.com",
+          pass: "pehelahai1"
+        }
+      });
+      var mailOptions = {
+        from: "eguru.proj@gmail.com",
+        to: email,
+        subject: "no-reply",
+        text: "Please Enter This Verification Code to Register \n" + mes
+      };
 
-  transporter.sendMail(mailOptions, function(error, info) {
-    if (error) {
-      console.log(error);
+      transporter.sendMail(mailOptions, function(error, info) {
+        if (error) {
+          console.log(error);
+        } else {
+          console.log("Send!");
+        }
+      });
+
+      res.send({
+        result: "Send",
+        details: req.cookies.userDetails
+      });
     } else {
-      console.log("Send!");
+      res.send({ result: "Account Already Exist!" });
     }
   });
-  res.sendFile("verifica.html", { root: "../e-app/" });
 });
 
+//email verification
 router.route("/verify").post((req, res) => {
-  const code = req.body.pin;
+  const code = req.body.vcode;
   const checkpin = req.cookies.userDetails.vercode;
-  const fullname = req.cookies.userDetails.fullname;
+  const username = req.cookies.userDetails.username;
   const email = req.cookies.userDetails.email;
   let password = req.cookies.userDetails.password;
-
   if (code == checkpin) {
     bcrypt.hash(password, saltRounds, function(err, hash) {
       if (err) {
         console.log(err);
       } else {
         password = hash;
-        const newAcc = new User({ fullname, email, password });
+        const newAcc = new User({ username, email, password });
         newAcc
           .save()
-          .then(() => res.send("Account Created SuccessFully"))
-          .then(() => res.redirect("http://localhost:3001/sign-up/"))
+          .then(() => res.send({ result: "Created" }))
+          //.then(() => res.redirect("http://localhost:3001/sign-up/"))
           .catch(err => res.status(400).json("error: " + err));
-        res.clearCookie("userDetails");
+        //res.clearCookie("userDetails");
       }
     });
   } else {
-    res.send("Incorrect Code");
+    res.send({ result: "Incorrect" });
   }
 });
 
+//forgot password
 router.route("/forgotmail").post((req, res) => {
   const email = req.body.email;
-  const uurl = "http://localhost:3001/forgot-pass/";
+  const uurl = "http://localhost:3000/";
 
   User.findOne({ email: email }, (err, foundData) => {
     if (err) {
@@ -112,11 +139,12 @@ router.route("/forgotmail").post((req, res) => {
           console.log("Send!");
         }
       });
-      res.redirect("https://mail.google.com/");
-    } else res.send("Account Doesn't Exist");
+      res.send({ result: "Check Your Email For Verification!" });
+    } else res.send({ result: "Account Doesn't Exist" });
   });
 });
 
+//forgot password verification
 router.route("/forgotpass").post((req, res) => {
   const newpassword = req.body.newpassword;
   const confirmpassword = req.body.confirmpassword;
@@ -125,7 +153,8 @@ router.route("/forgotpass").post((req, res) => {
     User.findOne({ email: email }, (err, foundData) => {
       if (err) {
         res.status((400).json("error: " + err));
-      } else {
+      }
+      if (foundData) {
         bcrypt.hash(newpassword, saltRounds, function(err, hash) {
           if (err) {
             console.log(err);
@@ -143,10 +172,11 @@ router.route("/forgotpass").post((req, res) => {
       }
     });
   } else {
-    res.send("New Password Did Not MATCH Confirm Password");
+    res.send("Confirm Password Did Not MATCH New Password");
   }
 });
 
+//log-in/sign-in code
 router.route("/").post((req, res) => {
   const email = req.body.email;
   const password = req.body.password;
@@ -155,15 +185,53 @@ router.route("/").post((req, res) => {
     if (err) console.log(err);
 
     if (foundAcc) {
-      bcrypt.compare(password, foundAcc.password, (err, result) => {
+      bcrypt.compare(password, foundAcc.password, (err, accre) => {
         if (err) console.log(err);
         else {
-          if (result == true) res.send("Welcome To Eguru");
-          else res.send("Account Not Found");
+          if (accre == true) res.send({ result: "Logged" });
+          else res.send({ result: "Wrong Password" });
         }
       });
-    } else res.send("byebye");
+    } else res.send({ result: "Wrong Email" });
   });
+});
+
+router.route("/send").post((req, res) => {
+  /*res.send([
+    {
+      email: "arpit1999@gmail.com",
+      uname: "Arpit"
+    },
+    {
+      email: "ankur@gmail.com",
+      uname: "Ankur"
+    },
+    {
+      uname: req.body.uname
+    }
+  ]);*/
+  res.cookie("testcook", { mes: "Hello everyone", mes2: "thanks" });
+  let data = {
+    result: req.cookies.testcook
+  };
+  console.log(data.result);
+});
+router.route("/send").get((req, res) => {
+  /*res.send([
+    {
+      email: "arpit1999@gmail.com",
+      uname: "Arpit"
+    },
+    {
+      email: "ankur@gmail.com",
+      uname: "Ankur"
+    },
+    {
+      uname: req.body.uname
+    }
+  ]);*/
+
+  res.send(req.cookies.testcook);
 });
 
 module.exports = router;
@@ -184,3 +252,46 @@ module.exports = router;
 } else {
   res.send("New Password Did Not MATCH Confirm Password");
 }*/
+
+//add-new
+/*router.route("/add").post((req, res) => {
+  const mes = req.body.vcode;
+  const email = req.body.email;
+
+  User.findOne({ email: email }, (err, foundAcc) => {
+    if (err) console.log(err);
+
+    if (!foundAcc) {
+      var transporter = nodemailer.createTransport({
+        host: "smtp.gmail.com",
+        port: 587,
+        secure: false,
+        requireTLS: true,
+        auth: {
+          user: "eguru.proj@gmail.com",
+          pass: "pehelahai1"
+        }
+      });
+      var mailOptions = {
+        from: "eguru.proj@gmail.com",
+        to: email,
+        subject: "no-reply",
+        text: "Please Enter This Verification Code to Register \n" + mes
+      };
+
+      transporter.sendMail(mailOptions, function(error, info) {
+        if (error) {
+          console.log(error);
+        } else {
+          console.log("Send!");
+        }
+      });
+
+      res.send({
+        result: "Send",
+      });
+    } else {
+      res.send({ result: "Account Already Exist!" });
+    }
+  });
+});*/
