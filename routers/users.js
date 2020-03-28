@@ -10,79 +10,19 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const User = require("../models/user.model");
 
 const saltRounds = 10;
-
+let mes = "";
 router.use(cookieParser());
 
 //sign-up
-// router.route("/add").post((req, res) => {
-//   const mes = req.body.vcode;
-//   const email = req.body.email;
-
-//   User.findOne({ email: email }, (err, foundAcc) => {
-//     if (err) console.log(err);
-
-//     if (!foundAcc) {
-//       var transporter = nodemailer.createTransport({
-//         host: "smtp.gmail.com",
-//         port: 587,
-//         secure: false,
-//         requireTLS: true,
-//         auth: {
-//           user: "eguru.proj@gmail.com",
-//           pass: "pehelahai1"
-//         }
-//       });
-//       var mailOptions = {
-//         from: "eguru.proj@gmail.com",
-//         to: email,
-//         subject: "no-reply",
-//         text: "Please Enter This Verification Code to Register \n" + mes
-//       };
-
-//       transporter.sendMail(mailOptions, function(error, info) {
-//         if (error) {
-//           console.log(error);
-//         } else {
-//           console.log("Send!");
-//         }
-//       });
-
-//       res.send({
-//         result: "Send",
-//       });
-//     } else {
-//       res.send({ result: "Account Already Exist!" });
-//     }
-//   });
-// });
 router.route("/add").post((req, res) => {
-  const username = req.body.username;
   const email = req.body.email;
-  const password = req.body.password;
 
   User.findOne({ email: email }, (err, foundAcc) => {
     if (err) console.log(err);
 
     if (!foundAcc) {
-      const mes = Math.floor(Math.random() * 1000000) + "";
-      let cdata = {
-        vercode: mes,
-        username: username,
-        email: email,
-        password: password
-      };
-      res.cookie(
-        "userDetails",
-        cdata,
-        {
-          maxAge: 1000 * 60 * 5
-        },
-        {
-          httpOnly: false,
-          secure: false,
-          sameSite: false
-        }
-      );
+      mes = Math.floor(Math.random() * 1000000) + "";
+      console.log(mes);
       var transporter = nodemailer.createTransport({
         host: "smtp.gmail.com",
         port: 587,
@@ -102,7 +42,7 @@ router.route("/add").post((req, res) => {
 
       transporter.sendMail(mailOptions, function(error, info) {
         if (error) {
-          console.log("Mailer error : ",error);
+          console.log("Mailer error : ", error);
         } else {
           console.log("Send!");
         }
@@ -118,51 +58,24 @@ router.route("/add").post((req, res) => {
   });
 });
 
-//email verification
-// router.route("/verify").post((req, res) => {
-//   const code = req.body.vcode;
-//   const checkpin = req.body.vercode;
-//   const username = req.body.username;
-//   const email = req.body.email;
-//   let password = req.body.password;
-//   if (code == checkpin) {
-//     bcrypt.hash(password, saltRounds, function(err, hash) {
-//       if (err) {
-//         console.log(err);
-//       } else {
-//         password = hash;
-//         const newAcc = new User({ username, email, password });
-//         newAcc
-//           .save()
-//           .then(() => res.send({ result: "Created" }))
-//           //.then(() => res.redirect("http://localhost:3001/sign-up/"))
-//           .catch(err => res.status(400).json("error: " + err));
-//         //res.clearCookie("userDetails");
-//       }
-//     });
-//   } else {
-//     res.send({ result: "Incorrect" });
-//   }
-// });
+//Email Verification
 router.route("/verify").post((req, res) => {
   const code = req.body.vcode;
-  const checkpin = req.cookies.userDetails.vercode;
-  const username = req.cookies.userDetails.username;
-  const email = req.cookies.userDetails.email;
-  let password = req.cookies.userDetails.password;
-  if (code == checkpin) {
+  const username = req.body.username;
+  const email = req.body.email;
+  let password = req.body.password;
+  const category = req.body.category;
+  if (code === mes) {
     bcrypt.hash(password, saltRounds, function(err, hash) {
       if (err) {
         console.log(err);
       } else {
         password = hash;
-        const newAcc = new User({ username, email, password });
+        const newAcc = new User({ username, email, password, category });
         newAcc
           .save()
           .then(() => res.send({ result: "Created" }))
-          //.then(() => res.redirect("http://localhost:3001/sign-up/"))
           .catch(err => res.status(400).json("error: " + err));
-        //res.clearCookie("userDetails");
       }
     });
   } else {
@@ -173,14 +86,13 @@ router.route("/verify").post((req, res) => {
 //forgot password
 router.route("/forgotmail").post((req, res) => {
   const email = req.body.email;
-  const uurl = "http://localhost:3000/";
+  const uurl = "http://localhost:3000/forgot/password";
 
   User.findOne({ email: email }, (err, foundData) => {
     if (err) {
       res.status((400).json("error: " + err));
     }
     if (foundData) {
-      res.cookie("uDetail", { email: email }, { maxAge: 1000 * 60 * 5 });
       var transporter = nodemailer.createTransport({
         host: "smtp.gmail.com",
         port: 587,
@@ -205,40 +117,31 @@ router.route("/forgotmail").post((req, res) => {
           console.log("Send!");
         }
       });
-      res.send({ result: "Check Your Email For Verification!" });
-    } else res.send({ result: "Account Doesn't Exist" });
+      res.send({ result: "Exist" });
+    } else res.send({ result: "DExist" });
   });
 });
 
 //forgot password verification
-router.route("/forgotpass").post((req, res) => {
-  const newpassword = req.body.newpassword;
-  const confirmpassword = req.body.confirmpassword;
-  const email = req.cookies.uDetail.email;
-  if (newpassword === confirmpassword) {
-    User.findOne({ email: email }, (err, foundData) => {
+router.route("/forgotpass").put((req, res) => {
+  const email = req.body.email;
+  let newpass = req.body.newpass;
+  const confpass = req.body.confpass;
+  if (newpass === confpass) {
+    bcrypt.hash(newpass, saltRounds, function(err, hash) {
       if (err) {
-        res.status((400).json("error: " + err));
-      }
-      if (foundData) {
-        bcrypt.hash(newpassword, saltRounds, function(err, hash) {
-          if (err) {
-            console.log(err);
-          } else {
-            foundData.password = hash;
-            foundData.save((err, data) => {
-              if (err) console.log(err);
-              else {
-                res.clearCookie("uDetail");
-                res.send("Password Changed Successfully");
-              }
-            });
+        console.log(err);
+      } else {
+        User.findOneAndUpdate({ email }, { password: hash }, (err, data) => {
+          if (err) console.log(err);
+          if (data) {
+            res.send({ result: "Success" });
           }
         });
       }
     });
   } else {
-    res.send("Confirm Password Did Not MATCH New Password");
+    res.send({ result: "NoMatch" });
   }
 });
 
@@ -254,7 +157,10 @@ router.route("/").post((req, res) => {
       bcrypt.compare(password, foundAcc.password, (err, accre) => {
         if (err) console.log(err);
         else {
-          if (accre == true) res.send({ result: "Logged" });
+          if (accre == true)
+            if (foundAcc.category === "teacher")
+              res.send({ result: "TLogged" });
+            else res.send({ result: "SLogged" });
           else res.send({ result: "Wrong Password" });
         }
       });

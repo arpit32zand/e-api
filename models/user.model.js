@@ -20,6 +20,10 @@ const signUp = new Schema({
     minlength: 7,
     trim: true,
     unique: true
+  },
+  category: {
+    type: String,
+    required: true
   }
 });
 const User = mongoose.model("User", signUp);
