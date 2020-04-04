@@ -3,8 +3,8 @@ const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 require("dotenv").config();
 var cors = require("cors");
+let autoIncrement = require("mongoose-auto-increment");
 const app = express();
-
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -43,6 +43,10 @@ app.get("/forgot-pass", (req, res) => {
 
 app.get("/getFile", (req, res) => {
   res.sendFile("verifica.html", { root: "../e-app/" });
+});
+
+app.get("/test", (req, res) => {
+  res.sendFile("test.html", { root: "../e-app/" });
 });
 
 app.get("/createFile", (req, res) => {

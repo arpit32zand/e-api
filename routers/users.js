@@ -5,12 +5,19 @@ const nodemailer = require("nodemailer");
 const bcrypt = require("bcryptjs");
 const cookieParser = require("cookie-parser");
 const router = express.Router();
+require("dotenv").config();
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 const User = require("../models/user.model");
+const Test = require("../models/test.model");
+const Mentor = require("../models/mentor.model");
+const Candidate = require("../models/candidate.model");
 
 const saltRounds = 10;
+// let uid = process.env.UID;
+
 let mes = "";
+let ra = "";
 router.use(cookieParser());
 
 //sign-up
@@ -22,7 +29,6 @@ router.route("/add").post((req, res) => {
 
     if (!foundAcc) {
       mes = Math.floor(Math.random() * 1000000) + "";
-      console.log(mes);
       var transporter = nodemailer.createTransport({
         host: "smtp.gmail.com",
         port: 587,
@@ -65,17 +71,76 @@ router.route("/verify").post((req, res) => {
   const email = req.body.email;
   let password = req.body.password;
   const category = req.body.category;
+  const mobileno = req.body.mobileno;
+  // const subject = "";
+  let courseId = " ",
+    courseName = " ",
+    fileType = " ";
+  path = " ";
+
+  let uid;
   if (code === mes) {
     bcrypt.hash(password, saltRounds, function(err, hash) {
       if (err) {
         console.log(err);
       } else {
         password = hash;
-        const newAcc = new User({ username, email, password, category });
-        newAcc
-          .save()
-          .then(() => res.send({ result: "Created" }))
-          .catch(err => res.status(400).json("error: " + err));
+
+        if (category === "mentor") {
+          uid = 1;
+          const newUser = new User({ uid, username, email, password });
+          newUser.save().then(() => {
+            Mentor.countDocuments()
+              .then(count => {
+                ra = count + 1;
+                const newAcc = new Mentor({
+                  uid,
+                  mid: ra,
+                  username,
+                  email,
+                  password,
+                  mobileno
+                });
+
+                newAcc
+                  .save()
+                  .then(() => res.send({ result: "Created" }))
+                  .catch(err => res.status(400).json("error: " + err));
+              })
+              .catch(err => res.status(400).json("error: " + err));
+          });
+        } else {
+          uid = 2;
+          const newUser = new User({ uid, username, email, password });
+          newUser
+            .save()
+            .then(() => {
+              Candidate.countDocuments().then(count => {
+                ra = count + 1;
+                const newAcc = new Candidate({
+                  uid,
+                  cid: ra,
+                  username,
+                  email,
+                  password,
+                  mobileno,
+                  subject: [
+                    {
+                      courseId,
+                      courseName,
+                      fileType,
+                      path
+                    }
+                  ]
+                });
+                newAcc
+                  .save()
+                  .then(() => res.send({ result: "Created" }))
+                  .catch(err => res.status(400).json("error: " + err));
+              });
+            })
+            .catch(err => res.status(400).json("error: " + err));
+        }
       }
     });
   } else {
@@ -169,24 +234,25 @@ router.route("/").post((req, res) => {
 });
 
 router.route("/send").post((req, res) => {
-  /*res.send([
-    {
-      email: "arpit1999@gmail.com",
-      uname: "Arpit"
-    },
-    {
-      email: "ankur@gmail.com",
-      uname: "Ankur"
-    },
-    {
-      uname: req.body.uname
-    }
-  ]);*/
-  res.cookie("testcook", { mes: "Hello everyone", mes2: "thanks" });
-  let data = {
-    result: req.cookies.testcook
-  };
-  console.log(data.result);
+  const user = req.body.user;
+  // Test.findOneAndUpdate(
+  //   (err, data) => {
+  //     if (err) console.log(err);
+  //     if (data) {
+  //       console.log({ result: "Success" });
+  //     }
+  //   }
+  // );
+  let ra = "";
+  Test.countDocuments().then(count => {
+    ra = count + 1;
+    const newUser = new Test({ uid: ra, user });
+
+    newUser
+      .save()
+      .then(() => res.send({ result: "Created" }))
+      .catch(err => res.status(400).json("error: " + err));
+  });
 });
 router.route("/send").get((req, res) => {
   /*res.send([

@@ -1,6 +1,11 @@
 const mongoose = require("mongoose");
 const Schema = mongoose.Schema;
 const signUp = new Schema({
+  uid: {
+    type: Number,
+    required: true,
+    trim: true
+  },
   username: {
     type: String,
     required: true,
@@ -20,11 +25,11 @@ const signUp = new Schema({
     minlength: 7,
     trim: true,
     unique: true
-  },
-  category: {
-    type: String,
-    required: true
   }
+  // category: {
+  //   type: String,
+  //   required: true
+  // }
 });
 const User = mongoose.model("User", signUp);
 module.exports = User;
