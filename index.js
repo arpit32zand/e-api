@@ -10,11 +10,15 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 const port = process.env.PORT || 3001;
 const uri = process.env.ATLAS_URI;
+const Candidate = require("./models/candidate.model");
+const User = require("./models/user.model");
+const allcourses = require("./models/allCourses.model");
+const Mentor = require("./models/mentor.model");
 
 mongoose.connect(uri, {
   useUnifiedTopology: true,
   useCreateIndex: true,
-  useNewUrlParser: true
+  useNewUrlParser: true,
 });
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection has error:"));
@@ -27,6 +31,58 @@ app.use("/cont", contRoute);
 
 const usersRoute = require("./routers/users");
 app.use("/user", usersRoute);
+
+app.post("/allCourses", (req, res) => {
+  const discountPrice = req.body.dprice;
+  const actualPrice = req.body.aprice;
+  const fileType = req.body.fileType;
+  const path = req.body.path;
+  const courseName = req.body.courseName;
+  const courseId = req.body.courseId;
+
+  const newCour = new allcourses({
+    courseId,
+    courseName,
+    path,
+    fileType,
+    actualPrice,
+    discountPrice,
+  });
+  newCour
+    .save()
+    .then(() => res.send("Saved"))
+    .catch((err) => res.status(400).json("error: " + err));
+});
+
+app.get("/allCourses", (req, res) => {
+  allcourses.find({}, (err, result) => {
+    if (err) {
+      console.log(err);
+    } else {
+      res.send(result);
+    }
+  });
+});
+
+app.get("/candidates", (req, res) => {
+  Candidate.find({}, (err, result) => {
+    if (err) {
+      console.log(err);
+    } else {
+      res.send(result);
+    }
+  });
+});
+
+app.get("/mentors", (req, res) => {
+  Mentor.find({}, (err, result) => {
+    if (err) {
+      console.log(err);
+    } else {
+      res.send(result);
+    }
+  });
+});
 
 app.get("/sign-up", (req, res) => {
   res.sendFile("SignUp.html", { root: "../e-app/" });

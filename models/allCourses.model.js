@@ -4,38 +4,38 @@ const courseSchema = new Schema({
   courseId: {
     type: Number,
     required: true,
-    minlength: 5,
+    //minlength: 5,
     trim: true,
-    unique: true
+    unique: true,
   },
   courseName: {
     type: String,
     required: true,
-    minlength: 5,
-    trim: true
+    // minlength: 5,
+    trim: true,
   },
   fileType: {
     type: String,
     required: true,
-    minlength: 5,
-    trim: true
+    // minlength: 5,
+    trim: true,
   },
   path: {
     type: String,
     required: true,
-    minlength: 5,
-    trim: true
+    // minlength: 5,
+    trim: true,
   },
   actualPrice: {
     type: Number,
     required: true,
-    trim: true
+    trim: true,
   },
   discountPrice: {
     type: Number,
     required: true,
-    trim: true
-  }
+    trim: true,
+  },
 });
-const allCourses = mongoose.model("allCourses", courseSchema);
-module.exports = allCourses;
+const allcourses = mongoose.model("allcourses", courseSchema);
+module.exports = allcourses;
