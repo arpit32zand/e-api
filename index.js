@@ -29,6 +29,9 @@ db.once("open", () => {
 const contRoute = require("./routers/content");
 app.use("/cont", contRoute);
 
+const testRoute = require("./routers/testing");
+app.use("/testing", testRoute);
+
 const usersRoute = require("./routers/users");
 app.use("/user", usersRoute);
 
