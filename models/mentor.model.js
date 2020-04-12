@@ -60,6 +60,16 @@ const memtor = new Schema({
         //minlength: 5,
         trim: true,
       },
+      actualPrice: {
+        type: Number,
+        // required: true,
+        trim: true,
+      },
+      discountPrice: {
+        type: Number,
+        // required: true,
+        trim: true,
+      },
     },
   ],
   username: {

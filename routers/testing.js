@@ -1,5 +1,6 @@
 const express = require("express");
 const app = express();
+const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcryptjs");
@@ -94,6 +95,90 @@ router.route("/log-in").get((req, res) => {
   }
 });
 
+router.route("/updatemc").post((req, res) => {
+  // const data = req.body.keys;
+  // console.log(data);
+  Object.keys(req.body).forEach((key) => {
+    if (key === "username") {
+      console.log("username");
+    } else if (key === "password") {
+      console.log("Password");
+    } else if (key === "subject.path") {
+      console.log("Subject");
+    } else console.log("Nothing");
+  });
+});
+
+router.route("/updatemc").put((req, res) => {
+  // const data = req.body.keys;
+  // console.log(data);
+  let email = "";
+  Object.keys(req.body).forEach((key) => {
+    if (key === "username") {
+      Candidate.findOneAndUpdate(
+        { email },
+        { username: req.body.username },
+        (err, data) => {
+          if (err) console.log(err);
+          if (data) {
+            console.log("data@@@@@@@@");
+          }
+        }
+      );
+    } else if (key === "password") {
+      Candidate.findOneAndUpdate(
+        { email },
+        { password: req.body.password },
+        (err, data) => {
+          if (err) console.log(err);
+          if (data) {
+            console.log("pass---------");
+          }
+        }
+      );
+    } else if (key === "path") {
+      let id = req.body.courseId;
+      let path = req.body.path;
+      Candidate.findOneAndUpdate(
+        { email, "subject.courseId": id },
+        {
+          $set: {
+            "subject.$.path": path,
+          },
+        },
+        (err, newa) => {
+          res.json(newa);
+        }
+      );
+    } else {
+      email = req.body.email;
+      console.log("email-------", email);
+    }
+  });
+});
+
+router.route("/deletemc").put((req, res) => {
+  // const data = req.body.keys;
+  // console.log(data);
+  let email = req.body.email;
+  Object.keys(req.body).forEach((field) => {
+    if (field === "courseId") {
+      let id = req.body.courseId;
+      Candidate.findOneAndUpdate(
+        { email },
+        {
+          $pull: {
+            subject: { courseId: { $in: [id] } },
+          },
+        },
+        (err, acc) => {
+          res.json(acc);
+        }
+      );
+    }
+  });
+});
+
 module.exports = router;
 
 /*if (newpassword === confirmpassword) {
@@ -155,3 +240,41 @@ module.exports = router;
       }
     });
   });*/
+
+// Candidate.aggregate(
+//   [
+//     {
+//       $unwind:{path: "$subject"}
+//     },
+//     {
+//       $match: {
+//         $and:[{
+//           "email": email,
+//           "subject.courseId": id
+//         }]
+//       },
+//     },
+//     {
+//       $set: {
+//         "subject.path": path,
+//       },
+//     },
+//     { $group: { _id: null, subject: { $push: "$subject" } } },
+//     // {
+//     //   $out: "Candidate"
+//     // },
+//     {
+//       $merge:{
+//         into: "Candidate",
+//         on: "subject.courseId",
+//         whenMatched: "replace",
+//         whenNotMatched: "insert"
+//       }
+//     },
+//   ],
+//   (err, data) => {
+//     if (err) console.log("ERROR : ", err);
+//     if (data) res.json(data);
+//     else res.send("nothing available");
+//   }
+// );

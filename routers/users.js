@@ -273,4 +273,164 @@ router.route("/authchecker").get((req, res) => {
   }
 });
 
+//update
+router.route("/update-m-c").get((req, res) => {
+  let email = "",
+    id = "",
+    username = "",
+    path = "",
+    mobileno = "";
+  Object.keys(req.body).forEach((key) => {
+    if (key === "username") {
+      if (req.body.uid === 1) {
+        Mentor.findOneAndUpdate(
+          { email },
+          { username: username },
+          (err, data) => {
+            if (err) console.log(err);
+            if (data) {
+              console.log("Candidate Done");
+            }
+          }
+        );
+        User.findOneAndUpdate(
+          { email },
+          { username: username },
+          (err, data) => {
+            if (err) console.log(err);
+            if (data) {
+              console.log("User Done");
+            }
+          }
+        );
+      } else {
+        Candidate.findOneAndUpdate(
+          { email },
+          { username: username },
+          (err, data) => {
+            if (err) console.log(err);
+            if (data) {
+              console.log("Candidate Done");
+            }
+          }
+        );
+        User.findOneAndUpdate(
+          { email },
+          { username: username },
+          (err, data) => {
+            if (err) console.log(err);
+            if (data) {
+              console.log("User Done");
+            }
+          }
+        );
+      }
+    } else if (key === "mobileno") {
+      if (uid === 1) {
+        Mentor.findOneAndUpdate(
+          { email },
+          { mobileno: mobileno },
+          (err, data) => {
+            if (err) console.log(err);
+            if (data) {
+              console.log("Candidate Done");
+            }
+          }
+        );
+      } else {
+        Candidate.findOneAndUpdate(
+          { email },
+          { mobileno: mobileno },
+          (err, data) => {
+            if (err) console.log(err);
+            if (data) {
+              console.log("Candidate Done");
+            }
+          }
+        );
+      }
+    } else if (key === "path") {
+      Mentor.findOneAndUpdate(
+        { email, "subject.courseId": id },
+        {
+          $set: {
+            "subject.$.path": path,
+          },
+        },
+        (err, newa) => {
+          res.json(newa);
+        }
+      );
+      allcourses.findOneAndUpdate(
+        { courseId: id },
+        {
+          $set: {
+            path: path,
+          },
+        },
+        (err, newa) => {
+          res.json(newa);
+        }
+      );
+    } else {
+      email = req.body.email;
+      id = req.body.courseId;
+      path = req.body.path;
+      uid = req.body.uid;
+      username = req.body.username;
+    }
+  });
+});
+
+//delete
+router.route("/update-m-c").get((req, res) => {
+  let email = "",
+    uid = "",
+    id = "";
+  Object.keys(req.body).forEach((key) => {
+    if (key === "courseId") {
+      if (uid === 1) {
+        Mentor.findOneAndUpdate(
+          { email },
+          {
+            $pull: {
+              subject: { courseId: { $in: [id] } },
+            },
+          },
+          (err, acc) => {
+            res.json(acc);
+          }
+        );
+        allcourses.findOneAndUpdate(
+          { courseId },
+          {
+            $pull: {
+              courseId: id,
+            },
+          },
+          (err, acc) => {
+            res.json(acc);
+          }
+        );
+      } else {
+        Candidate.findOneAndUpdate(
+          { email },
+          {
+            $pull: {
+              subject: { courseId: { $in: [id] } },
+            },
+          },
+          (err, acc) => {
+            res.json(acc);
+          }
+        );
+      }
+    } else {
+      email = req.body.email;
+      uid = req.body.uid;
+      id = req.body.courseId;
+    }
+  });
+});
+
 module.exports = router;
