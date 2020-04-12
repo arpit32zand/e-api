@@ -4,32 +4,28 @@ const signUp = new Schema({
   uid: {
     type: Number,
     required: true,
-    trim: true
+    trim: true,
   },
   username: {
     type: String,
     required: true,
     minlength: 5,
-    trim: true
+    trim: true,
   },
   email: {
     type: String,
     required: true,
     minlength: 7,
     trim: true,
-    unique: true
+    unique: true,
   },
   password: {
     type: String,
     required: true,
     minlength: 7,
     trim: true,
-    unique: true
-  }
-  // category: {
-  //   type: String,
-  //   required: true
-  // }
+    unique: true,
+  },
 });
 const User = mongoose.model("User", signUp);
 module.exports = User;

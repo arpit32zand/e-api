@@ -25,7 +25,6 @@ const candidSchema = new Schema({
     required: true,
     minlength: 7,
     trim: true,
-    unique: true
   },
   mobileno: {
     type: Number,
