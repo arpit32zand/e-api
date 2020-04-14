@@ -8,7 +8,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-const port = process.env.PORT || 3001;
+const port = process.env.PORT || 3003;
 const uri = process.env.ATLAS_URI;
 const Candidate = require("./models/candidate.model");
 const User = require("./models/user.model");
