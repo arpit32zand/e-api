@@ -274,13 +274,18 @@ router.route("/authchecker").get((req, res) => {
 });
 
 //update
-router.route("/update-m-c").get((req, res) => {
+router.route("/update-m-c").put((req, res) => {
   let email = "",
     id = "",
     username = "",
+    uid = "",
     path = "",
-    mobileno = "";
+    mobileno = "",
+    password = "",
+    newPass = "",
+    confPass = "";
   Object.keys(req.body).forEach((key) => {
+    console.log(key);
     if (key === "username") {
       if (req.body.uid === 1) {
         Mentor.findOneAndUpdate(
@@ -289,7 +294,7 @@ router.route("/update-m-c").get((req, res) => {
           (err, data) => {
             if (err) console.log(err);
             if (data) {
-              console.log("Candidate Done");
+              console.log("Mentor Done");
             }
           }
         );
@@ -299,7 +304,7 @@ router.route("/update-m-c").get((req, res) => {
           (err, data) => {
             if (err) console.log(err);
             if (data) {
-              console.log("User Done");
+              res.send({ result: "DONE" });
             }
           }
         );
@@ -320,7 +325,7 @@ router.route("/update-m-c").get((req, res) => {
           (err, data) => {
             if (err) console.log(err);
             if (data) {
-              console.log("User Done");
+              res.send({ result: "DONE" });
             }
           }
         );
@@ -333,7 +338,7 @@ router.route("/update-m-c").get((req, res) => {
           (err, data) => {
             if (err) console.log(err);
             if (data) {
-              console.log("Candidate Done");
+              res.send({ result: "DONE" });
             }
           }
         );
@@ -344,11 +349,27 @@ router.route("/update-m-c").get((req, res) => {
           (err, data) => {
             if (err) console.log(err);
             if (data) {
-              console.log("Candidate Done");
+              res.send({ result: "DONE" });
             }
           }
         );
       }
+    } else if (key === "oldPass") {
+      User.findOne({ email: email }, (err, foundAcc) => {
+        if (err) console.log(err);
+
+        if (foundAcc) {
+          bcrypt.compare(password, foundAcc.password, (err, accre) => {
+            if (err) console.log(err);
+
+            if (accre == true) {
+              res.send({ result: "FOUND" });
+            } else res.send({ result: "NOT" });
+          });
+        } else {
+          res.send({ result: "NO" });
+        }
+      });
     } else if (key === "path") {
       Mentor.findOneAndUpdate(
         { email, "subject.courseId": id },
@@ -369,21 +390,69 @@ router.route("/update-m-c").get((req, res) => {
           },
         },
         (err, newa) => {
-          res.json(newa);
+          res.send({ result: "DONE" });
         }
       );
+    } else if (key === "newPass") {
+      if (newPass === confPass) {
+        bcrypt.hash(newPass, saltRounds, function (err, hash) {
+          if (err) {
+            console.log(err);
+          } else {
+            User.findOneAndUpdate(
+              { email },
+              { password: hash },
+              (err, data) => {
+                if (err) console.log(err);
+                if (data) {
+                  console.log("User PASSWORD Changed");
+                }
+              }
+            );
+            if (uid === 1) {
+              Mentor.findOneAndUpdate(
+                { email },
+                { password: hash },
+                (err, data) => {
+                  if (err) console.log(err);
+                  if (data) {
+                    res.send({ result: "DONE" });
+                  }
+                }
+              );
+            } else {
+              Candidate.findOneAndUpdate(
+                { email },
+                { password: hash },
+                (err, data) => {
+                  if (err) console.log(err);
+                  if (data) {
+                    res.send({ result: "DONE" });
+                  }
+                }
+              );
+            }
+          }
+        });
+      } else {
+        res.send({ result: "NoMatch" });
+      }
     } else {
       email = req.body.email;
       id = req.body.courseId;
       path = req.body.path;
+      mobileno = req.body.mobileno;
       uid = req.body.uid;
+      password = req.body.oldPass;
+      newPass = req.body.newPass;
+      confPass = req.body.confPass;
       username = req.body.username;
     }
   });
 });
 
 //delete
-router.route("/update-m-c").get((req, res) => {
+router.route("delete-m-c").put((req, res) => {
   let email = "",
     uid = "",
     id = "";
@@ -398,7 +467,8 @@ router.route("/update-m-c").get((req, res) => {
             },
           },
           (err, acc) => {
-            res.json(acc);
+            if (err) return console.log(err);
+            console.log(acc);
           }
         );
         allcourses.findOneAndUpdate(
@@ -409,7 +479,8 @@ router.route("/update-m-c").get((req, res) => {
             },
           },
           (err, acc) => {
-            res.json(acc);
+            if (err) return console.log(err);
+            res.send({ result: "DONE" });
           }
         );
       } else {
@@ -421,7 +492,8 @@ router.route("/update-m-c").get((req, res) => {
             },
           },
           (err, acc) => {
-            res.json(acc);
+            if (err) return console.log(err);
+            res.send({ result: "DONE" });
           }
         );
       }
