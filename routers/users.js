@@ -91,8 +91,9 @@ router.route("/verify").post((req, res) => {
     courseName = " ",
     fileType = " ";
   path = " ";
+  let done = 0;
+  let uid, cid, mid;
 
-  let uid;
   if (code === mes) {
     bcrypt.hash(password, saltRounds, function (err, hash) {
       if (err) {
@@ -103,63 +104,78 @@ router.route("/verify").post((req, res) => {
         if (category === "mentor") {
           uid = 1;
           const newUser = new User({ uid, username, email, password });
-          newUser.save().then(() => {
-            Mentor.countDocuments()
-              .then((count) => {
-                ra = count + 1;
-                const newAcc = new Mentor({
-                  uid,
-                  mid: ra,
-                  username,
-                  email,
-                  password,
-                  mobileno,
-                  subject: [
-                    {
-                      courseId,
-                      courseName,
-                      fileType,
-                      path,
-                    },
-                  ],
-                });
+          newUser
+            .save()
+            .then(async () => {
+              while (done === 0) {
+                mid = Math.floor(Math.random() * 10000) + "";
+                console.log(uid);
+                const check = await Mentor.findOne({ mid });
+                if (check) {
+                  done = 0;
+                } else {
+                  done = 1;
+                }
+              }
+              const newAcc = new Mentor({
+                uid,
+                mid,
+                username,
+                email,
+                password,
+                mobileno,
+                subject: [
+                  {
+                    courseId,
+                    courseName,
+                    fileType,
+                    path,
+                  },
+                ],
+              });
 
-                newAcc
-                  .save()
-                  .then(() => res.send({ result: "Created" }))
-                  .catch((err) => res.status(400).json("error: " + err));
-              })
-              .catch((err) => res.status(400).json("error: " + err));
-          });
+              newAcc
+                .save()
+                .then(() => res.send({ result: "Created" }))
+                .catch((err) => res.status(400).json("error: " + err));
+            })
+            .catch((err) => res.status(400).json("error: " + err));
         } else {
           uid = 2;
           const newUser = new User({ uid, username, email, password });
           newUser
             .save()
-            .then(() => {
-              Candidate.countDocuments().then((count) => {
-                ra = count + 1;
-                const newAcc = new Candidate({
-                  uid,
-                  cid: ra,
-                  username,
-                  email,
-                  password,
-                  mobileno,
-                  subject: [
-                    {
-                      courseId,
-                      courseName,
-                      fileType,
-                      path,
-                    },
-                  ],
-                });
-                newAcc
-                  .save()
-                  .then(() => res.send({ result: "Created" }))
-                  .catch((err) => res.status(400).json("error: " + err));
+            .then(async () => {
+              while (done === 0) {
+                cid = Math.floor(Math.random() * 10000) + "";
+                console.log(uid);
+                const check = await Candidate.findOne({ cid });
+                if (check) {
+                  done = 0;
+                } else {
+                  done = 1;
+                }
+              }
+              const newAcc = new Candidate({
+                uid,
+                cid,
+                username,
+                email,
+                password,
+                mobileno,
+                subject: [
+                  {
+                    courseId,
+                    courseName,
+                    fileType,
+                    path,
+                  },
+                ],
               });
+              newAcc
+                .save()
+                .then(() => res.send({ result: "Created" }))
+                .catch((err) => res.status(400).json("error: " + err));
             })
             .catch((err) => res.status(400).json("error: " + err));
         }
@@ -285,7 +301,6 @@ router.route("/update-m-c").put((req, res) => {
     newPass = "",
     confPass = "";
   Object.keys(req.body).forEach((key) => {
-    console.log(key);
     if (key === "username") {
       if (req.body.uid === 1) {
         Mentor.findOneAndUpdate(
