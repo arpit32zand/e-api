@@ -58,6 +58,15 @@ const candidSchema = new Schema({
         //required: true,
         //minlength: 5,
         trim: true
+      },
+      textContent: {
+        type: String,
+        // required: true,
+        // minlength: 5,
+        trim: true,
+      },
+      imagePath: {
+        type: String
       }
     }
   ],

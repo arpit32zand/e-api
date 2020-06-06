@@ -13,6 +13,7 @@ const User = require("../models/user.model");
 const Test = require("../models/test.model");
 const Mentor = require("../models/mentor.model");
 const Candidate = require("../models/candidate.model");
+const allcourses = require("../models/allCourses.model");
 
 const saltRounds = 10;
 // let uid = process.env.UID;
@@ -518,6 +519,87 @@ router.route("delete-m-c").put((req, res) => {
       id = req.body.courseId;
     }
   });
+});
+
+router.route("/purchase").put((req, res) => {
+  cid=req.body.cid;
+  courseId=req.body.courseId;
+  courseName=req.body.courseName;
+  path=req.body.path;
+  fileType=req.body.fileType;
+  textContent=req.body.textContent;
+
+  Candidate.findOneAndUpdate(
+    { cid },
+    {
+      $push: {
+        subject: { courseId ,courseName ,path ,fileType ,textContent },
+      },
+    },
+    (err, data) => {
+      if (err) console.log(err);
+      if (data) {
+        res.send({ result: "DONE" });
+      }
+    }
+  );
+});
+
+router.route("/add-course").post(async (req, res) => {
+  let done = 0;
+  while (done === 0) {
+    courseId = Math.floor(Math.random() * 10000) + "";
+    
+    const check = await allcourses.findOne({ courseId });
+    if (check) {
+      done = 0;
+    } else {
+      done = 1;
+    }
+  }
+  email=req.body.email;
+  courseName=req.body.courseName;
+  path=req.body.path;
+  actualPrice=req.body.actualPrice;
+  discountPrice=req.body.discountPrice;
+  fileType=req.body.fileType;
+  textContent=req.body.textContent;
+
+  const newCourse = await new  allcourses({
+    courseId,
+    courseName,
+    fileType,
+    path,
+    actualPrice,
+    discountPrice,
+    textContent
+  });
+
+  await newCourse
+    .save()
+    .then(() => console.log("Done"))
+    .catch((err) => res.status(400).json("error: " + err));
+
+    await Mentor.findOneAndUpdate(
+      { email },
+      {
+        $push: {
+          subject: { courseId,
+            courseName,
+            fileType,
+            path,
+            actualPrice,
+            discountPrice,
+            textContent },
+        },
+      },
+      (err, data) => {
+        if (err) console.log(err);
+        if (data) {
+          res.send({ result: "Created" });
+        }
+      }
+    );
 });
 
 module.exports = router;
