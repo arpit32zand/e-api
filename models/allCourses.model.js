@@ -22,7 +22,7 @@ const courseSchema = new Schema({
   },
   path: {
     type: String,
-    required: true,
+    // required: true,
     // minlength: 5,
     trim: true,
   },
@@ -36,6 +36,15 @@ const courseSchema = new Schema({
     required: true,
     trim: true,
   },
+  textContent: {
+    type: String,
+    // required: true,
+    // minlength: 5,
+    trim: true,
+  },
+  imagePath: {
+    type: String
+  }
 });
 const allcourses = mongoose.model("allcourses", courseSchema);
 module.exports = allcourses;

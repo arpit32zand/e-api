@@ -4,6 +4,7 @@ const bodyParser = require("body-parser");
 require("dotenv").config();
 var cors = require("cors");
 let autoIncrement = require("mongoose-auto-increment");
+const multer = require('multer')
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
@@ -35,13 +36,42 @@ app.use("/testing", testRoute);
 const usersRoute = require("./routers/users");
 app.use("/user", usersRoute);
 
-app.post("/allCourses", (req, res) => {
+app.use('/uploads', express.static('courseImages'))
+
+const storage = multer.diskStorage({
+  destination: function (req, res, cb) {
+      cb(null, 'courseImages/')
+  },
+  filename:function (req, res, cb) {
+    cb(null, Date.now(), file.originalname)
+  }
+});
+
+const fileFilter = (req, res, cb) => {
+  if(file.mimeType =='image/jpeg' || file.mimeType =='image/png')
+  {
+    cb(null, true)
+  }else{
+    cb(null, false)
+  }
+}
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    filesize: 1024*1024*5
+  },
+  fileFilter: fileFilter
+})
+
+app.post("/allCourses", upload.single('imagePath'), (req, res) => {
   const discountPrice = req.body.dprice;
   const actualPrice = req.body.aprice;
   const fileType = req.body.fileType;
   const path = req.body.path;
   const courseName = req.body.courseName;
   const courseId = req.body.courseId;
+  const imagePath = req.file.path
 
   const newCour = new allcourses({
     courseId,
@@ -50,6 +80,7 @@ app.post("/allCourses", (req, res) => {
     fileType,
     actualPrice,
     discountPrice,
+    imagePath
   });
   newCour
     .save()
@@ -69,6 +100,16 @@ app.get("/allCourses", (req, res) => {
 
 app.get("/candidates", (req, res) => {
   Candidate.find({}, (err, result) => {
+    if (err) {
+      console.log(err);
+    } else {
+      res.send(result);
+    }
+  });
+});
+
+app.get("/allcourse", (req, res) => {
+  allcourses.find({}, (err, result) => {
     if (err) {
       console.log(err);
     } else {
