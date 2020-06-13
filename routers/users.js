@@ -3,6 +3,7 @@ const app = express();
 const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcryptjs");
+const multer = require('multer')
 //const cookieParser = require("cookie-parser");
 const router = express.Router();
 const session = require("express-session");
@@ -545,7 +546,36 @@ router.route("/purchase").put((req, res) => {
   );
 });
 
-router.route("/add-course").post(async (req, res) => {
+
+app.use('/uploads', express.static('courseImages'))
+
+const storage = multer.diskStorage({
+  destination: function (req, res, cb) {
+      cb(null, 'courseImages/')
+  },
+  filename:function (req, res, cb) {
+    cb(null, Date.now(), file.originalname)
+  }
+});
+
+const fileFilter = (req, res, cb) => {
+  if(file.mimeType =='image/jpeg' || file.mimeType =='image/png')
+  {
+    cb(null, true)
+  }else{
+    cb(null, false)
+  }
+}
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    filesize: 1024*1024*5
+  },
+  fileFilter: fileFilter
+})
+
+router.route("/add-course").post(upload.single('imagePath'), async (req, res) => {
   let done = 0;
   while (done === 0) {
     courseId = Math.floor(Math.random() * 10000) + "";
@@ -564,6 +594,7 @@ router.route("/add-course").post(async (req, res) => {
   discountPrice=req.body.discountPrice;
   fileType=req.body.fileType;
   textContent=req.body.textContent;
+  imagePath = req.body.imagePath
 
   const newCourse = await new  allcourses({
     courseId,
@@ -572,7 +603,8 @@ router.route("/add-course").post(async (req, res) => {
     path,
     actualPrice,
     discountPrice,
-    textContent
+    textContent,
+    imagePath
   });
 
   await newCourse
@@ -580,7 +612,7 @@ router.route("/add-course").post(async (req, res) => {
     .then(() => console.log("Done"))
     .catch((err) => res.status(400).json("error: " + err));
 
-    await Mentor.findOneAndUpdate(
+    await Mentor.update(
       { email },
       {
         $push: {
@@ -590,7 +622,8 @@ router.route("/add-course").post(async (req, res) => {
             path,
             actualPrice,
             discountPrice,
-            textContent },
+            textContent,
+            imagePath},
         },
       },
       (err, data) => {
