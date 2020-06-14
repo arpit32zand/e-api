@@ -3,7 +3,7 @@ const app = express();
 const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
 const bcrypt = require("bcryptjs");
-const multer = require('multer')
+const multer = require("multer");
 //const cookieParser = require("cookie-parser");
 const router = express.Router();
 const session = require("express-session");
@@ -523,18 +523,26 @@ router.route("delete-m-c").put((req, res) => {
 });
 
 router.route("/purchase").put((req, res) => {
-  cid=req.body.cid;
-  courseId=req.body.courseId;
-  courseName=req.body.courseName;
-  path=req.body.path;
-  fileType=req.body.fileType;
-  textContent=req.body.textContent;
+  cid = req.body.cid;
+  courseId = req.body.courseId;
+  courseName = req.body.courseName;
+  path = req.body.path;
+  fileType = req.body.fileType;
+  textContent = req.body.textContent;
+  imagePath = req.body.imagePath;
 
   Candidate.findOneAndUpdate(
     { cid },
     {
       $push: {
-        subject: { courseId ,courseName ,path ,fileType ,textContent },
+        subject: {
+          courseId,
+          courseName,
+          path,
+          fileType,
+          textContent,
+          imagePath,
+        },
       },
     },
     (err, data) => {
@@ -546,93 +554,95 @@ router.route("/purchase").put((req, res) => {
   );
 });
 
-
-app.use('/uploads', express.static('courseImages'))
+app.use("/uploads", express.static("courseImages"));
 
 const storage = multer.diskStorage({
   destination: function (req, res, cb) {
-      cb(null, 'courseImages/')
+    cb(null, "courseImages/");
   },
-  filename:function (req, res, cb) {
-    cb(null, Date.now(), file.originalname)
-  }
+  filename: function (req, res, cb) {
+    cb(null, Date.now(), file.originalname);
+  },
 });
 
 const fileFilter = (req, res, cb) => {
-  if(file.mimeType =='image/jpeg' || file.mimeType =='image/png')
-  {
-    cb(null, true)
-  }else{
-    cb(null, false)
+  if (file.mimeType == "image/jpeg" || file.mimeType == "image/png") {
+    cb(null, true);
+  } else {
+    cb(null, false);
   }
-}
+};
 
 const upload = multer({
   storage: storage,
   limits: {
-    filesize: 1024*1024*5
+    filesize: 1024 * 1024 * 5,
   },
-  fileFilter: fileFilter
-})
-
-router.route("/add-course").post(upload.single('imagePath'), async (req, res) => {
-  let done = 0;
-  while (done === 0) {
-    courseId = Math.floor(Math.random() * 10000) + "";
-    
-    const check = await allcourses.findOne({ courseId });
-    if (check) {
-      done = 0;
-    } else {
-      done = 1;
-    }
-  }
-  email=req.body.email;
-  courseName=req.body.courseName;
-  path=req.body.path;
-  actualPrice=req.body.actualPrice;
-  discountPrice=req.body.discountPrice;
-  fileType=req.body.fileType;
-  textContent=req.body.textContent;
-  imagePath = req.body.imagePath
-
-  const newCourse = await new  allcourses({
-    courseId,
-    courseName,
-    fileType,
-    path,
-    actualPrice,
-    discountPrice,
-    textContent,
-    imagePath
-  });
-
-  await newCourse
-    .save()
-    .then(() => console.log("Done"))
-    .catch((err) => res.status(400).json("error: " + err));
-
-    await Mentor.update(
-      { email },
-      {
-        $push: {
-          subject: { courseId,
-            courseName,
-            fileType,
-            path,
-            actualPrice,
-            discountPrice,
-            textContent,
-            imagePath},
-        },
-      },
-      (err, data) => {
-        if (err) console.log(err);
-        if (data) {
-          res.send({ result: "Created" });
-        }
-      }
-    );
+  fileFilter: fileFilter,
 });
+
+router
+  .route("/add-course")
+  .post(upload.single("imagePath"), async (req, res) => {
+    let done = 0;
+    while (done === 0) {
+      courseId = Math.floor(Math.random() * 10000) + "";
+
+      const check = await allcourses.findOne({ courseId });
+      if (check) {
+        done = 0;
+      } else {
+        done = 1;
+      }
+    }
+    email = req.body.email;
+    courseName = req.body.courseName;
+    path = req.body.path;
+    actualPrice = req.body.actualPrice;
+    discountPrice = req.body.discountPrice;
+    fileType = req.body.fileType;
+    textContent = req.body.textContent;
+    imagePath = req.body.imagePath;
+
+    const newCourse = await new allcourses({
+      courseId,
+      courseName,
+      fileType,
+      path,
+      actualPrice,
+      discountPrice,
+      textContent,
+      imagePath,
+    });
+
+    await newCourse
+      .save()
+      .then(() => {
+        Mentor.update(
+          { email },
+          {
+            $push: {
+              subject: {
+                courseId,
+                courseName,
+                fileType,
+                path,
+                actualPrice,
+                discountPrice,
+                textContent,
+                imagePath,
+              },
+            },
+          },
+          (err, data) => {
+            if (err) console.log(err);
+            if (data) {
+              res.send({ result: "Created" });
+            }
+          }
+        );
+      })
+      .catch((err) => res.status(400).json("error: " + err));
+  });
 
 module.exports = router;
