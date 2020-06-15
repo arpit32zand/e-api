@@ -20,6 +20,7 @@ const saltRounds = 10;
 // let uid = process.env.UID;
 
 const IN_PROD = process.env.NODE_ENV === "production";
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 let mes = "";
 let ra = "";
 //router.use(cookieParser());
@@ -557,31 +558,26 @@ router.route("/purchase").put((req, res) => {
   );
 });
 
-app.use("/uploads", express.static("courseImages"));
-
 const storage = multer.diskStorage({
-  destination: function (req, res, cb) {
-    cb(null, "courseImages/");
-  },
-  filename: function (req, res, cb) {
-    cb(null, Date.now(), file.originalname);
-  },
+    destination: (req, file, cb) => {
+        cb(null, './uploads/');
+    },
+    filename: (req, file, cb) => {
+        const fileName = file.originalname.toLowerCase();
+        cb(null, fileName)
+    }
 });
 
-const fileFilter = (req, res, cb) => {
-  if (file.mimeType == "image/jpeg" || file.mimeType == "image/png") {
-    cb(null, true);
-  } else {
-    cb(null, false);
-  }
-};
-
-const upload = multer({
-  storage: storage,
-  limits: {
-    filesize: 1024 * 1024 * 5,
-  },
-  fileFilter: fileFilter,
+var upload = multer({
+    storage: storage,
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype == "image/png" || file.mimetype == "image/jpg" || file.mimetype == "image/jpeg") {
+            cb(null, true);
+        } else {
+            cb(null, false);
+            return cb(new Error('Only .png, .jpg and .jpeg format allowed!'));
+        }
+    }
 });
 
 router
@@ -598,6 +594,7 @@ router
         done = 1;
       }
     }
+    const url = req.protocol + '://' + req.headers.host
     email = req.body.email;
     courseName = req.body.courseName;
     path = req.body.path;
@@ -605,7 +602,7 @@ router
     discountPrice = req.body.discountPrice;
     fileType = req.body.fileType;
     textContent = req.body.textContent;
-    imagePath = req.body.imagePath;
+    imagePath = url + '/uploads/' + req.file.originalname;
 
     const newCourse = await new allcourses({
       courseId,
@@ -640,7 +637,10 @@ router
           (err, data) => {
             if (err) console.log(err);
             if (data) {
-              res.send({ result: "Created" });
+              res.send({ result: "Created",userCreated: {
+                _id: data._id,
+                profileImg: data.imagePath
+            } });
             }
           }
         );

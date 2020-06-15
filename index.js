@@ -35,6 +35,7 @@ app.use("/testing", testRoute);
 const usersRoute = require("./routers/users");
 app.use("/user", usersRoute);
 
+app.use('/uploads', express.static('uploads'));
 
 
 app.get("/allCourses", (req, res) => {
