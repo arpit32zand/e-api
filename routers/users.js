@@ -46,6 +46,8 @@ router.route("/add").post((req, res) => {
 
     if (!foundAcc) {
       mes = Math.floor(Math.random() * 1000000) + "";
+      console.log(typeof mes);
+      console.log(mes);
       var transporter = nodemailer.createTransport({
         host: "smtp.gmail.com",
         port: 587,
@@ -95,7 +97,8 @@ router.route("/verify").post((req, res) => {
   path = " ";
   let done = 0;
   let uid, cid, mid;
-
+  console.log(typeof mes);
+  console.log(typeof code);
   if (code === mes) {
     bcrypt.hash(password, saltRounds, function (err, hash) {
       if (err) {
@@ -119,21 +122,21 @@ router.route("/verify").post((req, res) => {
                   done = 1;
                 }
               }
-              const newAcc = new Mentor({
+              const newAcc = await new Mentor({
                 uid,
                 mid,
                 username,
                 email,
                 password,
                 mobileno,
-                subject: [
-                  {
-                    courseId,
-                    courseName,
-                    fileType,
-                    path,
-                  },
-                ],
+                // subject: [
+                //   {
+                //     courseId,
+                //     courseName,
+                //     fileType,
+                //     path,
+                //   },
+                // ],
               });
 
               newAcc
@@ -165,14 +168,14 @@ router.route("/verify").post((req, res) => {
                 email,
                 password,
                 mobileno,
-                subject: [
-                  {
-                    courseId,
-                    courseName,
-                    fileType,
-                    path,
-                  },
-                ],
+                // subject: [
+                //   {
+                //     courseId,
+                //     courseName,
+                //     fileType,
+                //     path,
+                //   },
+                // ],
               });
               newAcc
                 .save()
